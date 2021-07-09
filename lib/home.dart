@@ -18,6 +18,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  String phone = "+201016234361";
   // File _file;
   // List<Reference> references;
   // bool _isLoading = false;
@@ -28,19 +29,26 @@ class _HomeState extends State<Home> {
     super.initState();
     //
     getData();
+
+
   }
   void getData() async{
-    final res = await SmsAutoFill().getAppSignature;
-    print(res);
-    _submitPhoneNumber("+201147137203");
+
+    await signatureOTP();
+    print("1");
+    await _submitPhoneNumber(phone);
+    print("2");
     listenOTP();
+    print("3");
   }
 
   TextEditingController _otpController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
 
-
+    var p = Provider.of<ProgramProvider>(context, listen: true);
+    p.otpController = _otpController;
     var clientData = FirebaseFirestore.instance.collection('clients_data');
     TextStyle theme1 = TextStyle(
         fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold);
@@ -52,7 +60,10 @@ class _HomeState extends State<Home> {
 
     double sizeX = MediaQuery.of(context).size.width;
     double sizeY = MediaQuery.of(context).size.height;
+
+
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text('Azhar Multi-Media OTP System', style: theme1),
         backgroundColor: Colors.white10,
@@ -80,6 +91,8 @@ class _HomeState extends State<Home> {
                           SizedBox(
                             width: 150,
                             child: PinFieldAutoFill(
+
+                              textInputAction: TextInputAction.none,
                                 controller: _otpController,
                                 keyboardType: TextInputType.number,
 
@@ -88,10 +101,12 @@ class _HomeState extends State<Home> {
                                 onCodeSubmitted: (val) {}, //code submitted callback
                                 onCodeChanged: (val) {
                                   _otpController.text = val;
+                                    p.ableScreen();
                                 }, //code changed callback
                                 codeLength: 6 //code length, default 6
                             ),
                             // child: TextField(
+                            //   readOnly: true,
                             //   decoration: InputDecoration(
                             //     enabledBorder: OutlineInputBorder(
                             //       borderRadius:
@@ -110,69 +125,74 @@ class _HomeState extends State<Home> {
                           ),
                         ],
                       ),
-                      SizedBox(
-                        height: 25,
-                      ),
-                      Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Recorder',
-                              style: theme2,
+                      if(p.verificationSend)
+                      Column(
+                        children: [
+                          SizedBox(
+                            height: 25,
+                          ),
+                          Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Recorder',
+                                  style: theme2,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      FeatureButtonsView(
-                        onUploadComplete:
+                          ),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          FeatureButtonsView(
+                            onUploadComplete:
                             Provider.of<ProgramProvider>(context, listen: true)
                                 .onUploadComplete,
-                      ),
-                      SizedBox(
-                        height: 25,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text(
-                            'Take A Picture ',
-                            style: theme2,
                           ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 15,
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.camera_alt),
-                        iconSize: 80,
-                        onPressed: () {
-                          Provider.of<ProgramProvider>(context, listen: false)
-                              .pickercamera();
-                        },
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Container(
-                        child:
+                          SizedBox(
+                            height: 25,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Text(
+                                'Take A Picture ',
+                                style: theme2,
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            height: 15,
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.camera_alt),
+                            iconSize: 80,
+                            onPressed: () {
+                              Provider.of<ProgramProvider>(context, listen: false)
+                                  .pickercamera();
+                            },
+                          ),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Container(
+                            child:
                             Provider.of<ProgramProvider>(context, listen: true)
-                                        .file ==
-                                    null
+                                .file ==
+                                null
                                 ? Text('There Is No Pic')
                                 : Image.file(
-                                    Provider.of<ProgramProvider>(context,
-                                            listen: true)
-                                        .file,
-                                    scale: 6,
-                                  ),
-                      ),
-                      SizedBox(
-                        height: 20,
+                              Provider.of<ProgramProvider>(context,
+                                  listen: true)
+                                  .file,
+                              scale: 6,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 20,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -186,7 +206,7 @@ class _HomeState extends State<Home> {
                 //     },
                 //     child: Text("Take another picture"),
                 //   ),
-
+                if(p.verificationSend)
                 ElevatedButton(
                   onPressed: () async {
 
@@ -201,7 +221,7 @@ class _HomeState extends State<Home> {
                   },
                   child: Text("clint Data"),
                 ),
-
+                if(p.verificationSend)
                 // ignore: deprecated_member_use
                 RaisedButton(
                   child: Text(
@@ -216,6 +236,7 @@ class _HomeState extends State<Home> {
                                 .file);
                     await Provider.of<ProgramProvider>(context, listen: false)
                         .onFileUploadButtonPressed(context);
+                     Provider.of<ProgramProvider>(context, listen: false).uploadPhoneData(phone);
                     await Provider.of<ProgramProvider>(context, listen: false).increaseIndex();
                   },
                 ),
@@ -285,6 +306,11 @@ class _HomeState extends State<Home> {
 
   void listenOTP() async {
     await SmsAutoFill().listenForCode;
+
+  }
+  Future<void> signatureOTP() async {
+    final res = await SmsAutoFill().getAppSignature;
+    print(res);
 
   }
 

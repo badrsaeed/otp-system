@@ -17,6 +17,9 @@ class ProgramProvider with ChangeNotifier {
   List<Reference> references;
   bool isLoading = false;
 
+  var otpController;
+  bool verificationSend = false;
+
   List<int> numbers = [0, 1, 2, 3, 4, 5, 6];
   int index = 0;
 
@@ -26,13 +29,23 @@ class ProgramProvider with ChangeNotifier {
 
   FlutterAudioRecorder audioRecorder;
 
+  void ableScreen() {
+    if (otpController.text.length > 0) {
+      verificationSend = true;
+      notifyListeners();
+    } else {
+      verificationSend = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> onFileUploadButtonPressed(BuildContext ctx) async {
     FirebaseStorage firebaseStorage = FirebaseStorage.instance;
     isUploading = true;
 
     try {
       await firebaseStorage
-          .ref('upload-voice-firebase')
+          .ref('Client${numbers[index]} Data')
           .child(filePath.substring(filePath.lastIndexOf('/'), filePath.length))
           .putFile(File(filePath));
       onUploadComplete();
@@ -67,7 +80,6 @@ class ProgramProvider with ChangeNotifier {
       await startRecording(ctx);
       notifyListeners();
     }
-
   }
 
   void onPlayButtonPressed() {
@@ -84,17 +96,19 @@ class ProgramProvider with ChangeNotifier {
       isPlaying = false;
       notifyListeners();
     }
-
   }
 
   Future<void> startRecording(BuildContext ctx) async {
     final bool hasRecordingPermission =
-        await FlutterAudioRecorder.hasPermissions;
+    await FlutterAudioRecorder.hasPermissions;
     if (hasRecordingPermission) {
       Directory directory = await getApplicationDocumentsDirectory();
       String filepath = directory.path +
           '/' +
-          DateTime.now().millisecondsSinceEpoch.toString() +
+          DateTime
+              .now()
+              .millisecondsSinceEpoch
+              .toString() +
           '.aac';
       audioRecorder =
           FlutterAudioRecorder(filepath, audioFormat: AudioFormat.AAC);
@@ -115,16 +129,14 @@ class ProgramProvider with ChangeNotifier {
   Future<void> onUploadComplete() async {
     FirebaseStorage firebaseStorage = FirebaseStorage.instance;
     ListResult listResult =
-        await firebaseStorage.ref().child('upload-voice-firebase').list();
+    await firebaseStorage.ref().child('Client${numbers[index]} Data').list();
 
     references = listResult.items;
     notifyListeners();
     print(references);
-
   }
 
   Future pickercamera() async {
-
     final image = await ImagePicker().getImage(
       source: ImageSource.camera,
     );
@@ -153,7 +165,8 @@ class ProgramProvider with ChangeNotifier {
       print("1");
       //make a reference have two child the first one for file name, second for image name
       final ref =
-          FirebaseStorage.instance.ref().child('clint_images').child('${numbers[index]}.jpg');
+      FirebaseStorage.instance.ref().child('Client${numbers[index]} Data').child(
+          '${numbers[index]}.jpg');
       //upload the image into the server
       print("2");
       await ref.putFile(image);
@@ -161,16 +174,36 @@ class ProgramProvider with ChangeNotifier {
       isLoading = false;
       print("Image uploaded successfully");
       notifyListeners();
-    }
-    //if an error occurred try to know the reason of error and handle it
-    catch (e) {
+    }catch (e) {
       print(e);
       notifyListeners();
     }
-
   }
+
+  void uploadPhoneData(String phone) async {
+    //try to upload the image
+    try {
+      print("1");
+      //make a reference have two child the first one for file name, second for image name
+      final ref =
+      FirebaseStorage.instance.ref().child('Client${numbers[index]} Data').child(
+          'phone number.txt');
+      //upload the image into the server
+      print("2");
+      await ref.putString(phone);
+      print("3");
+      isLoading = false;
+      print("phone uploaded successfully");
+      notifyListeners();
+    } catch (e) {
+      print(e);
+      notifyListeners();
+    }
+  }
+
   void increaseIndex() {
     index++;
     notifyListeners();
   }
+
 }
