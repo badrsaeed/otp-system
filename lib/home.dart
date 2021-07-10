@@ -18,7 +18,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String phone = "+201016234361";
+  String phone = "";
+
   // File _file;
   // List<Reference> references;
   // bool _isLoading = false;
@@ -29,16 +30,24 @@ class _HomeState extends State<Home> {
     super.initState();
     //
     getData();
-
-
   }
-  void getData() async{
 
-    await signatureOTP();
+  Future<void> getPhone() async {
+    var userData = await FirebaseFirestore.instance
+        .collection('phone')
+        .doc('JjSw6iyXSTAkVPb2nsOP')
+        .get();
+    phone = userData['phone'];
+    print(phone);
+  }
+
+  void getData() async {
+    await getPhone();
     print("1");
-    await _submitPhoneNumber(phone);
-    print("2");
     listenOTP();
+    await signatureOTP();
+    print("2");
+    await _submitPhoneNumber(phone);
     print("3");
   }
 
@@ -46,7 +55,6 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-
     var p = Provider.of<ProgramProvider>(context, listen: true);
     p.otpController = _otpController;
     var clientData = FirebaseFirestore.instance.collection('clients_data');
@@ -60,7 +68,6 @@ class _HomeState extends State<Home> {
 
     double sizeX = MediaQuery.of(context).size.width;
     double sizeY = MediaQuery.of(context).size.height;
-
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -91,20 +98,22 @@ class _HomeState extends State<Home> {
                           SizedBox(
                             width: 150,
                             child: PinFieldAutoFill(
-
-                              textInputAction: TextInputAction.none,
+                                textInputAction: TextInputAction.none,
                                 controller: _otpController,
                                 keyboardType: TextInputType.number,
 
                                 // decoration: // UnderlineDecoration, BoxLooseDecoration or BoxTightDecoration see https://github.com/TinoGuo/pin_input_text_field for more info,
-                                currentCode: _otpController.text, // prefill with a code
-                                onCodeSubmitted: (val) {}, //code submitted callback
+                                currentCode: _otpController.text,
+                                // prefill with a code
+                                onCodeSubmitted: (val) {},
+                                //code submitted callback
                                 onCodeChanged: (val) {
                                   _otpController.text = val;
-                                    p.ableScreen();
-                                }, //code changed callback
+                                  p.ableScreen();
+                                },
+                                //code changed callback
                                 codeLength: 6 //code length, default 6
-                            ),
+                                ),
                             // child: TextField(
                             //   readOnly: true,
                             //   decoration: InputDecoration(
@@ -125,75 +134,77 @@ class _HomeState extends State<Home> {
                           ),
                         ],
                       ),
-                      if(p.verificationSend)
-                      Column(
-                        children: [
-                          SizedBox(
-                            height: 25,
-                          ),
-                          Center(
-                            child: Row(
+                      if (p.verificationSend)
+                        Column(
+                          children: [
+                            SizedBox(
+                              height: 25,
+                            ),
+                            Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Recorder',
+                                    style: theme2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            FeatureButtonsView(
+                              onUploadComplete: Provider.of<ProgramProvider>(
+                                      context,
+                                      listen: true)
+                                  .onUploadComplete,
+                            ),
+                            SizedBox(
+                              height: 25,
+                            ),
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                              children: <Widget>[
                                 Text(
-                                  'Recorder',
+                                  'Take A Picture ',
                                   style: theme2,
                                 ),
                               ],
                             ),
-                          ),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          FeatureButtonsView(
-                            onUploadComplete:
-                            Provider.of<ProgramProvider>(context, listen: true)
-                                .onUploadComplete,
-                          ),
-                          SizedBox(
-                            height: 25,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(
-                                'Take A Picture ',
-                                style: theme2,
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 15,
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.camera_alt),
-                            iconSize: 80,
-                            onPressed: () {
-                              Provider.of<ProgramProvider>(context, listen: false)
-                                  .pickercamera();
-                            },
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Container(
-                            child:
-                            Provider.of<ProgramProvider>(context, listen: true)
-                                .file ==
-                                null
-                                ? Text('There Is No Pic')
-                                : Image.file(
-                              Provider.of<ProgramProvider>(context,
-                                  listen: true)
-                                  .file,
-                              scale: 6,
+                            SizedBox(
+                              height: 15,
                             ),
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                        ],
-                      ),
+                            IconButton(
+                              icon: Icon(Icons.camera_alt),
+                              iconSize: 80,
+                              onPressed: () {
+                                Provider.of<ProgramProvider>(context,
+                                        listen: false)
+                                    .pickercamera();
+                              },
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Container(
+                              child: Provider.of<ProgramProvider>(context,
+                                              listen: true)
+                                          .file ==
+                                      null
+                                  ? Text('There Is No Pic')
+                                  : Image.file(
+                                      Provider.of<ProgramProvider>(context,
+                                              listen: true)
+                                          .file,
+                                      scale: 6,
+                                    ),
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -206,40 +217,40 @@ class _HomeState extends State<Home> {
                 //     },
                 //     child: Text("Take another picture"),
                 //   ),
-                if(p.verificationSend)
-                ElevatedButton(
-                  onPressed: () async {
+                if (p.verificationSend)
+                  ElevatedButton(
+                    onPressed: () async {
+                      final _userData = await FirebaseFirestore.instance
+                          .collection('clients_data')
+                          .doc('2')
+                          .get();
 
-                    final _userData = await FirebaseFirestore.instance
-                        .collection('clients_data')
-                        .doc('2')
-                        .get();
-
-
-                    print(
-                        "phone: ${_userData['phone']}\nname : ${_userData['name']}\naccount Number : ${_userData['account_number']}");
-                  },
-                  child: Text("clint Data"),
-                ),
-                if(p.verificationSend)
-                // ignore: deprecated_member_use
-                RaisedButton(
-                  child: Text(
-                    'Verify',
-                    style: theme1,
+                      print(
+                          "phone: ${_userData['phone']}\nname : ${_userData['name']}\naccount Number : ${_userData['account_number']}");
+                    },
+                    child: Text("clint Data"),
                   ),
-                  color: Colors.black,
-                  onPressed: () async{
-                    await Provider.of<ProgramProvider>(context, listen: false)
-                        .uploadData(
-                            Provider.of<ProgramProvider>(context, listen: false)
-                                .file);
-                    await Provider.of<ProgramProvider>(context, listen: false)
-                        .onFileUploadButtonPressed(context);
-                     Provider.of<ProgramProvider>(context, listen: false).uploadPhoneData(phone);
-                    await Provider.of<ProgramProvider>(context, listen: false).increaseIndex();
-                  },
-                ),
+                if (p.verificationSend)
+                  // ignore: deprecated_member_use
+                  RaisedButton(
+                    child: Text(
+                      'Verify',
+                      style: theme1,
+                    ),
+                    color: Colors.black,
+                    onPressed: () async {
+                      await Provider.of<ProgramProvider>(context, listen: false)
+                          .uploadData(Provider.of<ProgramProvider>(context,
+                                  listen: false)
+                              .file);
+                      await Provider.of<ProgramProvider>(context, listen: false)
+                          .onFileUploadButtonPressed(context);
+                      Provider.of<ProgramProvider>(context, listen: false)
+                          .uploadPhoneData(phone);
+                      await Provider.of<ProgramProvider>(context, listen: false)
+                          .increaseIndex();
+                    },
+                  ),
               ],
             ),
           ],
@@ -250,8 +261,9 @@ class _HomeState extends State<Home> {
 
   Future<List> _submitPhoneNumber(String phoneNumber) async {
     /// NOTE: Either append your phone number country code or add in the code itself
-    AuthCredential _phoneAuthCredential=AuthCredential(providerId: '',signInMethod: '');
-    String _verifectionId='';
+    AuthCredential _phoneAuthCredential =
+        AuthCredential(providerId: '', signInMethod: '');
+    String _verifectionId = '';
     print(phoneNumber);
 
     /// The below functions are the callbacks, separated so as to make code more readable
@@ -261,13 +273,13 @@ class _HomeState extends State<Home> {
       print(phoneAuthCredential);
       await FirebaseAuth.instance
           .signInWithCredential(_phoneAuthCredential)
-          .then((UserCredential authRes) async{
+          .then((UserCredential authRes) async {
         print(authRes.user.toString());
       });
     }
 
     void verificationFailed(Exception error) {
-      print(error.toString());
+      print(error.toString() + "  ossosososoos");
     }
 
     void codeSent(dynamic verificationId, dynamic code) {
@@ -279,7 +291,6 @@ class _HomeState extends State<Home> {
       print('codeAutoRetrievalTimeout');
       //Navigator.push(context, MaterialPageRoute(builder: (context)=>VerfectionScreen(verificationId)));
     }
-
 
     await FirebaseAuth.instance.verifyPhoneNumber(
       /// Make sure to prefix with your country code
@@ -301,20 +312,20 @@ class _HomeState extends State<Home> {
       /// After automatic code retrival `tmeout` this function is called
       codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
     );
-    return [_phoneAuthCredential , _verifectionId]; // All the callbacks are above
+    return [
+      _phoneAuthCredential,
+      _verifectionId
+    ]; // All the callbacks are above
   }
 
   void listenOTP() async {
     await SmsAutoFill().listenForCode;
-
   }
+
   Future<void> signatureOTP() async {
     final res = await SmsAutoFill().getAppSignature;
     print(res);
-
   }
-
-
 
 // Future<void> _onUploadComplete() async {
 //   FirebaseStorage firebaseStorage = FirebaseStorage.instance;
