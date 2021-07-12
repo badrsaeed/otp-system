@@ -1,4 +1,3 @@
-import 'package:final_project/auth.dart';
 import 'package:final_project/home.dart';
 import 'package:final_project/providers/program_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -25,6 +24,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Home(),
     );
   }

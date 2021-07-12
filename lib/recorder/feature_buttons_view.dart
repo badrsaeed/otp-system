@@ -60,34 +60,35 @@ class _FeatureButtonsViewState extends State<FeatureButtonsView> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.replay),
+                      icon: Icon(Icons.replay,size: 40),
                       onPressed: () =>
                           Provider.of<ProgramProvider>(context, listen: false)
                               .onRecordAgainButtonPressed(),
                     ),
+                    SizedBox(width: 20),
                     IconButton(
                       icon: Icon(
                           Provider.of<ProgramProvider>(context, listen: true)
                                   .isPlaying
                               ? Icons.pause
-                              : Icons.play_arrow),
+                              : Icons.play_arrow,size: 40),
                       onPressed: () =>
                           Provider.of<ProgramProvider>(context, listen: false)
                               .onPlayButtonPressed(),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.upload_file),
-                      onPressed: () =>
-                          Provider.of<ProgramProvider>(context, listen: false)
-                              .onFileUploadButtonPressed(context),
-                    ),
+                    // IconButton(
+                    //   icon: Icon(Icons.upload_file,color: Colors.blue,size: 40),
+                    //   onPressed: () =>
+                    //       Provider.of<ProgramProvider>(context, listen: false)
+                    //           .onFileUploadButtonPressed(context),
+                    // ),
                   ],
                 )
           : IconButton(
               icon: Provider.of<ProgramProvider>(context, listen: true)
                       .isRecording
-                  ? Icon(Icons.pause)
-                  : Icon(Icons.fiber_manual_record),
+                  ? Icon(Icons.pause,size: 40)
+                  : Icon(Icons.keyboard_voice,size: 40,),
               onPressed: () =>
                   Provider.of<ProgramProvider>(context, listen: false)
                       .onRecordButtonPressed(context),

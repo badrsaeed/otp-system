@@ -20,9 +20,8 @@ class ProgramProvider with ChangeNotifier {
   var otpController;
   bool verificationSend = false;
 
-  List<int> numbers = [0, 1, 2, 3, 4, 5, 6];
+  List<int> numbers = [0, 1, 2, 3, 4, 5, 6,7,8,9];
   int index = 0;
-
 
   AudioPlayer audioPlayer;
   String filePath;
@@ -51,7 +50,7 @@ class ProgramProvider with ChangeNotifier {
       onUploadComplete();
     } catch (error) {
       print('Error occured while uplaoding to Firebase ${error.toString()}');
-      Scaffold.of(ctx).showSnackBar(
+      ScaffoldMessenger.of(ctx).showSnackBar(
         SnackBar(
           content: Text('Error occured while uplaoding'),
         ),
@@ -100,15 +99,12 @@ class ProgramProvider with ChangeNotifier {
 
   Future<void> startRecording(BuildContext ctx) async {
     final bool hasRecordingPermission =
-    await FlutterAudioRecorder.hasPermissions;
+        await FlutterAudioRecorder.hasPermissions;
     if (hasRecordingPermission) {
       Directory directory = await getApplicationDocumentsDirectory();
       String filepath = directory.path +
           '/' +
-          DateTime
-              .now()
-              .millisecondsSinceEpoch
-              .toString() +
+          DateTime.now().millisecondsSinceEpoch.toString() +
           '.aac';
       audioRecorder =
           FlutterAudioRecorder(filepath, audioFormat: AudioFormat.AAC);
@@ -117,7 +113,7 @@ class ProgramProvider with ChangeNotifier {
       filePath = filepath;
       notifyListeners();
     } else {
-      Scaffold.of(ctx).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
         content: Center(
           child: Text('Please enable recording permission'),
         ),
@@ -128,8 +124,10 @@ class ProgramProvider with ChangeNotifier {
 
   Future<void> onUploadComplete() async {
     FirebaseStorage firebaseStorage = FirebaseStorage.instance;
-    ListResult listResult =
-    await firebaseStorage.ref().child('Client${numbers[index]} Data').list();
+    ListResult listResult = await firebaseStorage
+        .ref()
+        .child('Client${numbers[index]} Data')
+        .list();
 
     references = listResult.items;
     notifyListeners();
@@ -159,22 +157,22 @@ class ProgramProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void uploadData(File image) async {
+  Future<void> uploadData(File image) async {
     //try to upload the image
     try {
       print("1");
       //make a reference have two child the first one for file name, second for image name
-      final ref =
-      FirebaseStorage.instance.ref().child('Client${numbers[index]} Data').child(
-          '${numbers[index]}.jpg');
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('Client${numbers[index]} Data')
+          .child('${numbers[index]}.jpg');
       //upload the image into the server
       print("2");
       await ref.putFile(image);
       print("3");
-      isLoading = false;
       print("Image uploaded successfully");
       notifyListeners();
-    }catch (e) {
+    } catch (e) {
       print(e);
       notifyListeners();
     }
@@ -185,14 +183,14 @@ class ProgramProvider with ChangeNotifier {
     try {
       print("1");
       //make a reference have two child the first one for file name, second for image name
-      final ref =
-      FirebaseStorage.instance.ref().child('Client${numbers[index]} Data').child(
-          'phone number.txt');
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('Client${numbers[index]} Data')
+          .child('phone number.txt');
       //upload the image into the server
       print("2");
       await ref.putString(phone);
       print("3");
-      isLoading = false;
       print("phone uploaded successfully");
       notifyListeners();
     } catch (e) {
@@ -201,9 +199,16 @@ class ProgramProvider with ChangeNotifier {
     }
   }
 
-  void increaseIndex() {
+ void increaseIndex() {
+    if (index == numbers.length) {
+      index = 0;
+    }
     index++;
+    isLoading = false;
     notifyListeners();
   }
-
-}
+  void showAlertDialog() {
+      isLoading = true;
+      notifyListeners();
+  }
+  }

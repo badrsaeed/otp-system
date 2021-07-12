@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file/local.dart';
+
 import 'package:final_project/providers/program_provider.dart';
 import 'package:final_project/recorder/feature_buttons_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sms_autofill/sms_autofill.dart';
@@ -19,17 +21,16 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   String phone = "";
+  bool isLoading = false;
 
-  // File _file;
-  // List<Reference> references;
-  // bool _isLoading = false;
-  int account_number = 0;
+  // int account_number = 0;
 
   void initState() {
     // TODO: implement initState
-    super.initState();
+    listenOTP();
     //
-    getData();
+    // getData();
+    super.initState();
   }
 
   Future<void> getPhone() async {
@@ -41,17 +42,29 @@ class _HomeState extends State<Home> {
     print(phone);
   }
 
-  void getData() async {
-    await getPhone();
-    print("1");
-    listenOTP();
-    await signatureOTP();
-    print("2");
-    await _submitPhoneNumber(phone);
-    print("3");
+  @override
+  void dispose() {
+    // TODO: implement dispose
+//   cancel();
+    SmsAutoFill().unregisterListener();
+    super.dispose();
+//
   }
 
+  String appSignature = '';
 
+  void getData() async {
+    //   await listenOTP();
+    // print("3");
+
+    await signatureOTP();
+    print("2");
+    await getPhone();
+    print("1");
+
+    await _submitPhoneNumber(phone);
+    print("4");
+  }
 
   TextEditingController _otpController = TextEditingController();
 
@@ -59,203 +72,206 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     var p = Provider.of<ProgramProvider>(context, listen: true);
     p.otpController = _otpController;
-    var clientData = FirebaseFirestore.instance.collection('clients_data');
+
     TextStyle theme1 = TextStyle(
         fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold);
     TextStyle theme2 = TextStyle(
-        fontSize: 18,
+        fontSize: 22,
         color: Colors.black,
         fontWeight: FontWeight.bold,
         fontStyle: FontStyle.italic);
 
     double sizeX = MediaQuery.of(context).size.width;
-    double sizeY = MediaQuery.of(context).size.height;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text('Azhar Multi-Media OTP System', style: theme1),
-        backgroundColor: Colors.white10,
+        centerTitle: true,
+        backgroundColor: Colors.black45,
+        title: Text('Biometric Authentication App', style: theme1),
+        //  backgroundColor: Colors.white10,
       ),
-      body: Container(
-        width: sizeX,
-        child: ListView(
-          children: [
-            Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Container(
+          width: sizeX,
+          child: ListView(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  // mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: <Widget>[
+                        Text(
+                          'OTP Code ',
+                          style: theme2,
+                        ),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        SizedBox(
+                          width: 120,
+                          child: PinFieldAutoFill(
+                              textInputAction: TextInputAction.done,
+                              // focusNode: AlwaysDisabledFocusNode(),
+                              controller: _otpController,
+                              // keyboardType: TextInputType.number,
+                              decoration: UnderlineDecoration(
+                                textStyle: TextStyle(
+                                    fontSize: 22, color: Colors.black),
+                                colorBuilder: FixedColorBuilder(
+                                  Colors.black.withOpacity(0.3),
+                                ),
+                              ),
+                              currentCode: _otpController.text,
+                              // prefill with a code
+                              onCodeSubmitted: (val) {},
+                              //code submitted callback
+                              onCodeChanged: (val) {
+                                _otpController.text = val;
+                                p.ableScreen();
+                              },
+
+                              //code changed callback
+                              codeLength: 6 //code length, default 6
+                              ),
+                        ),
+                      ],
+                    ),
+                    if (p.verificationSend)
+                      Column(
+                        children: [
+                          SizedBox(
+                            height: 40,
+                          ),
                           Text(
-                            'Verification Code ',
+                            'Recorder',
+                            style: theme2,
+                          ),
+                          FeatureButtonsView(
+                            onUploadComplete: Provider.of<ProgramProvider>(
+                                    context,
+                                    listen: true)
+                                .onUploadComplete,
+                          ),
+                          SizedBox(
+                            height: 40,
+                          ),
+                          Text(
+                            'Take A Picture ',
                             style: theme2,
                           ),
                           SizedBox(
-                            width: 8,
+                            height: 10,
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.camera_alt,
+                            ),
+                            iconSize: 60,
+                            onPressed: () {
+                              Provider.of<ProgramProvider>(context,
+                                      listen: false)
+                                  .pickercamera();
+                            },
                           ),
                           SizedBox(
-                            width: 150,
-                            child: PinFieldAutoFill(
-                                textInputAction: TextInputAction.none,
-                                controller: _otpController,
-                                keyboardType: TextInputType.number,
-
-                                // decoration: // UnderlineDecoration, BoxLooseDecoration or BoxTightDecoration see https://github.com/TinoGuo/pin_input_text_field for more info,
-                                currentCode: _otpController.text,
-                                // prefill with a code
-                                onCodeSubmitted: (val) {},
-                                //code submitted callback
-                                onCodeChanged: (val) {
-                                  _otpController.text = val;
-                                  p.ableScreen();
-                                },
-                                //code changed callback
-                                codeLength: 6 //code length, default 6
-                                ),
-                            // child: TextField(
-                            //   readOnly: true,
-                            //   decoration: InputDecoration(
-                            //     enabledBorder: OutlineInputBorder(
-                            //       borderRadius:
-                            //           BorderRadius.all(Radius.circular(15)),
-                            //       borderSide: BorderSide(color: Colors.grey),
-                            //     ),
-                            //     //enabled: false,
-                            //     border: InputBorder.none,
-                            //     focusedBorder: OutlineInputBorder(
-                            //       borderRadius:
-                            //           BorderRadius.all(Radius.circular(15)),
-                            //       borderSide: BorderSide(color: Colors.grey),
-                            //     ),
-                            //   ),
-                            // ),
+                            height: 20,
+                          ),
+                          Container(
+                            child: Provider.of<ProgramProvider>(context,
+                                            listen: true)
+                                        .file ==
+                                    null
+                                ? Text(
+                                    'There is no picture yet',
+                                    style: TextStyle(
+                                        color: Colors.red, fontSize: 15),
+                                  )
+                                : Image.file(
+                                    Provider.of<ProgramProvider>(context,
+                                            listen: true)
+                                        .file,
+                                    scale: 6,
+                                  ),
+                          ),
+                          SizedBox(
+                            height: 20,
                           ),
                         ],
                       ),
-                      if (p.verificationSend)
-                        Column(
-                          children: [
-                            SizedBox(
-                              height: 25,
-                            ),
-                            Center(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Recorder',
-                                    style: theme2,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 5,
-                            ),
-                            FeatureButtonsView(
-                              onUploadComplete: Provider.of<ProgramProvider>(
-                                      context,
-                                      listen: true)
-                                  .onUploadComplete,
-                            ),
-                            SizedBox(
-                              height: 25,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Text(
-                                  'Take A Picture ',
-                                  style: theme2,
-                                ),
-                              ],
-                            ),
-                            SizedBox(
-                              height: 15,
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.camera_alt),
-                              iconSize: 80,
-                              onPressed: () {
-                                Provider.of<ProgramProvider>(context,
-                                        listen: false)
-                                    .pickercamera();
-                              },
-                            ),
-                            SizedBox(
-                              height: 20,
-                            ),
-                            Container(
-                              child: Provider.of<ProgramProvider>(context,
-                                              listen: true)
-                                          .file ==
-                                      null
-                                  ? Text('There Is No Pic')
-                                  : Image.file(
-                                      Provider.of<ProgramProvider>(context,
-                                              listen: true)
-                                          .file,
-                                      scale: 6,
-                                    ),
-                            ),
-                            SizedBox(
-                              height: 20,
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
-                // if (Provider.of<ProgramProvider>(context, listen: true)
-                //     .isPhotoTaken)
-                //   ElevatedButton(
-                //     onPressed: () {
-                //       Provider.of<ProgramProvider>(context, listen: false)
-                //           .resetImage();
-                //     },
-                //     child: Text("Take another picture"),
-                //   ),
-                if (p.verificationSend)
-                  ElevatedButton(
-                    onPressed: () async {
-                      final _userData = await FirebaseFirestore.instance
-                          .collection('clients_data')
-                          .doc('2')
-                          .get();
-
-                      print(
-                          "phone: ${_userData['phone']}\nname : ${_userData['name']}\naccount Number : ${_userData['account_number']}");
-                    },
-                    child: Text("clint Data"),
-                  ),
-                if (p.verificationSend)
-                  // ignore: deprecated_member_use
-                  RaisedButton(
-                    child: Text(
-                      'Verify',
-                      style: theme1,
-                    ),
-                    color: Colors.black,
-                    onPressed: () async {
-                      await Provider.of<ProgramProvider>(context, listen: false)
-                          .uploadData(Provider.of<ProgramProvider>(context,
-                                  listen: false)
-                              .file);
-                      await Provider.of<ProgramProvider>(context, listen: false)
-                          .onFileUploadButtonPressed(context);
-                      Provider.of<ProgramProvider>(context, listen: false)
-                          .uploadPhoneData(phone);
-                      await Provider.of<ProgramProvider>(context, listen: false)
-                          .increaseIndex();
-                    },
-                  ),
-              ],
-            ),
-          ],
+              ),
+              if (p.verificationSend)
+                isLoading
+                    ? Column(
+                        children: [
+                          Text("Uploading..."),
+                          SizedBox(
+                            height: 15,
+                          ),
+                          CircularProgressIndicator(),
+                        ],
+                      )
+                    :
+                    // ignore: deprecated_member_use
+                    SizedBox(
+                        width: sizeX,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                              backgroundColor:
+                                  MaterialStateProperty.all(Colors.black87),
+                              shape: MaterialStateProperty.all(
+                                  RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ))),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Text(
+                              'Verify',
+                              style: TextStyle(fontSize: 25),
+                              // style: theme1,
+                            ),
+                          ),
+                          // color: Colors.black,
+                          onPressed: (p.file != null && p.filePath != null)
+                              ? () async {
+                                  setState(() {
+                                    isLoading = true;
+                                  });
+                                  await Provider.of<ProgramProvider>(context,
+                                          listen: false)
+                                      .uploadData(Provider.of<ProgramProvider>(
+                                              context,
+                                              listen: false)
+                                          .file);
+                                  await Provider.of<ProgramProvider>(context,
+                                          listen: false)
+                                      .onFileUploadButtonPressed(context);
+                                  Provider.of<ProgramProvider>(context,
+                                          listen: false)
+                                      .uploadPhoneData(phone);
+                                  Provider.of<ProgramProvider>(context,
+                                          listen: false)
+                                      .increaseIndex();
+                                  Provider.of<ProgramProvider>(context,
+                                          listen: false)
+                                      .file = null;
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                }
+                              : null,
+                        ),
+                      ),
+            ],
+          ),
         ),
       ),
     );
@@ -320,58 +336,23 @@ class _HomeState extends State<Home> {
     ]; // All the callbacks are above
   }
 
-  void listenOTP() async {
+  Future<void> listenOTP() async {
     await SmsAutoFill().listenForCode;
+    print('3');
   }
 
-  Future<void> signatureOTP() async {
-    final res = await SmsAutoFill().getAppSignature;
-    print(res);
-  }
+  signatureOTP() async {
+    SmsAutoFill().getAppSignature.then((signature) {
+      setState(() {
+        appSignature = signature;
+      });
+    });
 
-// Future<void> _onUploadComplete() async {
-//   FirebaseStorage firebaseStorage = FirebaseStorage.instance;
-//   ListResult listResult =
-//   await firebaseStorage.ref().child('upload-voice-firebase').list();
-//   setState(() {
-//     references = listResult.items;
-//     print(references);
-//   });
-// }
-//
-// Future pickercamera() async {
-//   final image = await ImagePicker().getImage(
-//     source: ImageSource.camera,
-//   );
-//   if (image != null) {
-//     setState(() {
-//       _file = File(image.path);
-//     });
-//     print("Done!");
-//   } else {
-//     print("no image selected");
-//   }
-// }
-//
-// void _uploadData(File image) async {
-//   //try to upload the image
-//   try {
-//     print("1");
-//     //make a reference have two child the first one for file name, second for image name
-//     final ref =
-//     FirebaseStorage.instance.ref().child('clint_images').child('1.jpg');
-//     //upload the image into the server
-//     print("2");
-//     await ref.putFile(image);
-//     print("3");
-//     setState(() {
-//       _isLoading = false;
-//       print("Image uploaded successfully");
-//     });
-//   }
-//   //if an error occurred try to know the reason of error and handle it
-//   catch (e) {
-//     print(e);
-//   }
-// }
+    print('ttttttttttttttttttttttt $appSignature');
+  }
+}
+
+class AlwaysDisabledFocusNode extends FocusNode {
+  @override
+  bool get hasFocus => false;
 }
